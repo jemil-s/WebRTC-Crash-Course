@@ -1,5 +1,4 @@
-let APP_ID = env.process.API_KEY
-
+let APP_ID = "a61de49c814d471f89c7974f720f9704"
 
 let peerConnection;
 let localStream;
