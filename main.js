@@ -1,4 +1,4 @@
-let APP_ID = "YOU'RE AGORA APP ID"
+let APP_ID = env.process.API_KEY
 
 
 let peerConnection;
