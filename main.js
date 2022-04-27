@@ -15,7 +15,8 @@ let init = async () => {
   console.log("canvas", canvas);
   let ctx = canvas.getContext("2d");
 
-  localStream = canvas.captureStream(25);
+  localStream = canvas.captureStream(25); // frames per second
+
 
   //document.getElementById("user-1").srcObject = localStream;
 };
