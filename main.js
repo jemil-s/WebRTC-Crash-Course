@@ -1,132 +1,141 @@
-let APP_ID = "a61de49c814d471f89c7974f720f9704"
-
 let peerConnection;
 let localStream;
 let remoteStream;
 
-let uid = String(Math.floor(Math.random() * 10000))
-let token = null;
-let client;
-
 let servers = {
-    iceServers:[
-        {
-            urls:['stun:stun1.1.google.com:19302', 'stun:stun2.1.google.com:19302']
-        }
-    ]
-}
-
+  iceServers: [
+    {
+      urls: ["stun:stun1.1.google.com:19302", "stun:stun2.1.google.com:19302"],
+    },
+  ],
+};
 
 let init = async () => {
-    client = await AgoraRTM.createInstance(APP_ID)
-    await client.login({uid, token})
-    
-    const channel = client.createChannel('main')
-    channel.join()
 
-    channel.on('MemberJoined', handlePeerJoined)
-    client.on('MessageFromPeer', handleMessageFromPeer)
+  let canvas = document.getElementById("canvas");
+  console.log("canvas", canvas);
+  let ctx = canvas.getContext("2d");
 
-   localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
-   document.getElementById('user-1').srcObject = localStream
-}
+  localStream = canvas.captureStream();
 
-let handlePeerJoined = async (MemberId) => {
-    console.log('A new peer has joined this room:', MemberId)
-    createOffer(MemberId)
-}
 
-let handleMessageFromPeer = async (message, MemberId) => {
-    message = JSON.parse(message.text)
-    console.log('Message:', message.type)
+  //document.getElementById("user-1").srcObject = localStream;
+};
 
-    if(message.type === 'offer'){
-        if(!localStream){
-            localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
-            document.getElementById('user-1').srcObject = localStream
-        }
+let createOffer = async () => {
+  createPeerConnection("offer-sdp");
 
-        document.getElementById('offer-sdp').value = JSON.stringify(message.offer)
-        createAnswer(MemberId)
+  let offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+
+  document.getElementById("offer-sdp").value = JSON.stringify(offer);
+};
+
+let createPeerConnection = async (sdpType) => {
+  peerConnection = new RTCPeerConnection(servers);
+
+  remoteStream = new MediaStream();
+
+  document.getElementById("user-1").srcObject = remoteStream;
+
+  localStream.getTracks().forEach((track) => {
+    peerConnection.addTrack(track, localStream);
+  });
+
+  peerConnection.ontrack = (event) => {
+    event.streams[0].getTracks().forEach((track) => {
+      remoteStream.addTrack(track);
+    });
+  };
+
+  peerConnection.onicecandidate = async (event) => {
+    if (event.candidate) {
+      document.getElementById(sdpType).value = JSON.stringify(
+        peerConnection.localDescription
+      );
     }
+  };
+};
 
-    if(message.type === 'answer'){
-        document.getElementById('answer-sdp').value = JSON.stringify(message.answer)
-        addAnswer()
-    }
+let createAnswer = async () => {
 
-    if(message.type === 'candidate'){
-        if(peerConnection){
-            peerConnection.addIceCandidate(message.candidate)
-        }
-    }
-}
+  createPeerConnection("answer-sdp");
 
-let createPeerConnection = async (sdpType, MemberId) => {
-    peerConnection = new RTCPeerConnection(servers)
+  let offer = document.getElementById("offer-sdp").value;
+  if (!offer) {
+    return alert("Retrieve offer first");
+  }
 
-    remoteStream = new MediaStream()
-    document.getElementById('user-2').srcObject = remoteStream
+  offer = JSON.parse(offer);
+  await peerConnection.setRemoteDescription(offer);
 
-    localStream.getTracks().forEach((track) => {
-        peerConnection.addTrack(track, localStream)
-    })
+  let answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
 
-    peerConnection.ontrack = async (event) => {
-        event.streams[0].getTracks().forEach((track) => {
-            remoteStream.addTrack(track)
-        })
-    }
-
-    peerConnection.onicecandidate = async (event) => {
-        if(event.candidate){
-            document.getElementById(sdpType).value = JSON.stringify(peerConnection.localDescription)
-            client.sendMessageToPeer({text:JSON.stringify({'type':'candidate', 'candidate':event.candidate})}, MemberId)
-        }
-    }
-}
-
-let createOffer = async (MemberId) => {
-    
-    createPeerConnection('offer-sdp', MemberId)
-
-    let offer = await peerConnection.createOffer()
-    await peerConnection.setLocalDescription(offer)
-
-    document.getElementById('offer-sdp').value = JSON.stringify(offer)
-    client.sendMessageToPeer({text:JSON.stringify({'type':'offer', 'offer':offer})}, MemberId)
-}
-
-let createAnswer = async (MemberId) => {
-    createPeerConnection('answer-sdp', MemberId)
-
-    let offer = document.getElementById('offer-sdp').value
-    if(!offer) return alert('Retrieve offer from peer first...')
-
-    offer = JSON.parse(offer)
-    await peerConnection.setRemoteDescription(offer)
-    
-    let answer = await peerConnection.createAnswer()
-    await peerConnection.setLocalDescription(answer)
-
-    document.getElementById('answer-sdp').value  = JSON.stringify(answer)
-    client.sendMessageToPeer({text:JSON.stringify({'type':'answer', 'answer':answer})}, MemberId)
-}
+  const videoPlayer = document.getElementById("user-1");
+  videoPlayer.classList.add("show")
+};
 
 let addAnswer = async () => {
-    let answer = document.getElementById('answer-sdp').value
-    if(!answer) return alert('Retrieve answer from peer first...')
+  let answer = document.getElementById("answer-sdp").value;
+  if (!answer) return alert("Retrieve answer from peer first...");
 
-    answer = JSON.parse(answer)
+  answer = JSON.parse(answer);
 
-    if(!peerConnection.currentRemoteDescription){
-        peerConnection.setRemoteDescription(answer)
-    }
+  if (!peerConnection.currentRemoteDescription) {
+    peerConnection.setRemoteDescription(answer);
+  }
+};
 
-}
+const drawOnCanvas = () => {
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext("2d");
 
-init()
+  let stream = canvas.captureStream();
 
-// document.getElementById('create-offer').addEventListener('click', createOffer)
-// document.getElementById('create-answer').addEventListener('click', createAnswer)
-// document.getElementById('add-answer').addEventListener('click', addAnswer)
+  console.log("stream canvas", stream);
+
+  localStream = stream;
+
+  function start(event) {
+    canvas.addEventListener("mousemove", draw);
+    reposition(event);
+  }
+
+  function stop() {
+    canvas.removeEventListener("mousemove", draw);
+  }
+
+  function reposition(event) {
+    coord.x = event.clientX - canvas.offsetLeft;
+    coord.y = event.clientY - canvas.offsetTop;
+  }
+
+  function draw(event) {
+    ctx.beginPath();
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#ACD3ED";
+    ctx.moveTo(coord.x, coord.y);
+    reposition(event);
+    ctx.lineTo(coord.x, coord.y);
+    ctx.stroke();
+  }
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mouseup", stop);
+
+  let coord = { x: 0, y: 0 };
+};
+
+window.addEventListener("load", () => {
+  document
+    .getElementById("create-offer")
+    .addEventListener("click", createOffer);
+  document
+    .getElementById("create-answer")
+    .addEventListener("click", createAnswer);
+  document.getElementById("add-answer").addEventListener("click", addAnswer);
+  init();
+  drawOnCanvas();
+});
