@@ -11,13 +11,11 @@ let servers = {
 };
 
 let init = async () => {
-
   let canvas = document.getElementById("canvas");
   console.log("canvas", canvas);
   let ctx = canvas.getContext("2d");
 
-  localStream = canvas.captureStream();
-
+  localStream = canvas.captureStream(25);
 
   //document.getElementById("user-1").srcObject = localStream;
 };
@@ -58,7 +56,6 @@ let createPeerConnection = async (sdpType) => {
 };
 
 let createAnswer = async () => {
-
   createPeerConnection("answer-sdp");
 
   let offer = document.getElementById("offer-sdp").value;
@@ -73,7 +70,7 @@ let createAnswer = async () => {
   await peerConnection.setLocalDescription(answer);
 
   const videoPlayer = document.getElementById("user-1");
-  videoPlayer.classList.add("show")
+  videoPlayer.classList.add("show");
 };
 
 let addAnswer = async () => {
@@ -128,6 +125,13 @@ const drawOnCanvas = () => {
   let coord = { x: 0, y: 0 };
 };
 
+const clearCanvas = () => {
+  const canvas = document.getElementById("canvas");
+  const context = canvas.getContext("2d");
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+};
+
 window.addEventListener("load", () => {
   document
     .getElementById("create-offer")
@@ -136,6 +140,7 @@ window.addEventListener("load", () => {
     .getElementById("create-answer")
     .addEventListener("click", createAnswer);
   document.getElementById("add-answer").addEventListener("click", addAnswer);
+  document.getElementById("clear-btn").addEventListener("click", clearCanvas);
   init();
   drawOnCanvas();
 });
