@@ -10,13 +10,25 @@ let servers = {
   ],
 };
 
+let currentRoomId;
+let creatorId;
+let socket;
+let userId;
+let answer;
+
 let init = async () => {
   let canvas = document.getElementById("canvas");
   console.log("canvas", canvas);
   let ctx = canvas.getContext("2d");
 
-  localStream = canvas.captureStream(60); // frames per second
+  socket = new WebSocket("ws://localhost:4000");
 
+  socket.onopen = socketOpen;
+  socket.onmessage = socketMessage;
+  socket.onclose = socketClose;
+  socket.onerror = socketError;
+
+  localStream = canvas.captureStream(60); // frames per second
 
   //document.getElementById("user-1").srcObject = localStream;
 };
@@ -26,8 +38,7 @@ let createOffer = async () => {
 
   let offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
-
-  document.getElementById("offer-sdp").value = JSON.stringify(offer);
+  socket.send(JSON.stringify({ type: "offer", payload: offer }));
 };
 
 let createPeerConnection = async (sdpType) => {
@@ -59,24 +70,41 @@ let createPeerConnection = async (sdpType) => {
 let createAnswer = async () => {
   createPeerConnection("answer-sdp");
 
-  let offer = document.getElementById("offer-sdp").value;
+  /*   let offer = document.getElementById("offer-sdp").value;
   if (!offer) {
     return alert("Retrieve offer first");
   }
+ */
 
-  offer = JSON.parse(offer);
+  const roomId = document.getElementById("roomId").textContent;
+
+  console.log(roomId, "roomId");
+
+  socket.send(
+    JSON.stringify({
+      type: "getOffer",
+      payload: {
+        roomId,
+        userId,
+      },
+    })
+  );
+
+  /*  offer = JSON.parse(offer);
   await peerConnection.setRemoteDescription(offer);
 
-  let answer = await peerConnection.createAnswer();
+  answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
 
   const videoPlayer = document.getElementById("user-1");
-  videoPlayer.classList.add("show");
+  videoPlayer.classList.add("show"); */
 };
 
 let addAnswer = async () => {
-  let answer = document.getElementById("answer-sdp").value;
-  if (!answer) return alert("Retrieve answer from peer first...");
+  /*   let answer = document.getElementById("answer-sdp").value;
+  if (!answer) return alert("Retrieve answer from peer first..."); */
+
+  console.log(answer, "answer");
 
   answer = JSON.parse(answer);
 
@@ -84,6 +112,42 @@ let addAnswer = async () => {
     peerConnection.setRemoteDescription(answer);
   }
 };
+
+let socketOpen = (message) => {
+  console.log("on conect", message);
+};
+
+let socketMessage = (msg) => {
+  console.log(msg);
+  const message = JSON.parse(msg.data);
+  console.log(message);
+
+  switch (message.type) {
+    case "id": {
+      setId(message.payload);
+      break;
+    }
+    case "roomId": {
+      console.log("room id");
+      setRoomId(message.payload);
+      break;
+    }
+  }
+};
+
+let setRoomId = (message) => {
+  const roomid = document.getElementById("roomId");
+  roomid.textContent = message;
+  console.log(message, "message");
+};
+
+let socketClose = () => {};
+
+let socketError = () => {};
+
+function setId(message) {
+  userId = message;
+}
 
 const drawOnCanvas = () => {
   let canvas = document.getElementById("canvas");
