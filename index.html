@@ -5,34 +5,42 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
-    <script src="main.js"></script>
+    <script src="duplicate.js"></script>
     <title>Jemil web rtc</title>
   </head>
   <body>
-    <div id="videos">
-      <div style="width: 100%">
-        <h1>Hang</h1>
-        <div>
-          <h2>room id:</h2>
-          <p id="roomId"></p>
-        </div>
-      </div>
+    <div style="width: 100%">
+      <h1>Hang</h1>
       <div>
-        <video class="video-player" id="user-1" autoplay playsinline></video>
-
-        <canvas id="canvas" width="150" height="150"></canvas>
-        <button id="clear-btn">clear</button>
+        <h2>room id:</h2>
+        <p id="roomId"></p>
       </div>
     </div>
+    <div style="width: 100%; padding: 0 1rem">
+      <video class="video-player" id="user-1" autoplay playsinline></video>
 
-    <button id="create-offer">Create offer</button>
+      <canvas
+        style="max-height: 60vh"
+        id="canvas"
+        width="200"
+        height="250"
+      ></canvas>
+      <button id="clear-btn">clear</button>
+    </div>
+
+    <button id="createRoom">create room</button>
+    <button style="display: none" id="joinRoom">joinRoom</button>
+
+    <!--     <button id="create-offer">Create offer</button>
     <label>SDP offer</label>
-    <textarea id="offer-sdp"></textarea>
-
+    <textarea id="offer-sdp"></textarea> -->
+    <!-- 
     <button id="create-answer">Create answer</button>
     <label>SDP answer</label>
     <textarea id="answer-sdp"></textarea>
 
-    <button id="add-answer">Create answer</button>
+    <button id="add-answer">Create answer</button> -->
+
+    <!--     <textarea id="print"></textarea> -->
   </body>
 </html>
