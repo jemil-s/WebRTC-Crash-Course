@@ -18,7 +18,7 @@ let answer;
 let roomId;
 
 let init = async () => {
-  let canvas = document.getElementById("canvas");
+  let canvas = document.getElementById("rtc-canvas");
   let createRoomBtn = document.getElementById("createRoom");
 
   let ctx = canvas.getContext("2d");
@@ -32,8 +32,6 @@ let init = async () => {
   socket.onerror = socketError;
 
   createRoomBtn.addEventListener("click", createRoom);
-
-  //document.getElementById("user-1").srcObject = localStream;
 };
 
 let createPeerConnection = async (sdpType, userId) => {
@@ -114,31 +112,14 @@ let createPeerConnection = async (sdpType, userId) => {
 };
 
 let createOffer = async (userId) => {
-  console.log("createOffer called", userId);
   await createPeerConnection("offer", userId);
-  console.log("after ", peerConnection.localDescription);
 
   let offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
-  console.log("setted peer");
-
-  /*   const payload = {
-    offer,
-    userId,
-  };
-  socket.send(JSON.stringify({ type: "offer", payload })); */
 };
 
 let createAnswer = async () => {
-  /*   let offer = document.getElementById("offer-sdp").value;
-  if (!offer) {
-    return alert("Retrieve offer first");
-  }
- */
-
   const roomId = document.getElementById("roomId").textContent;
-
-  console.log(roomId, "roomId");
 
   socket.send(
     JSON.stringify({
@@ -252,7 +233,6 @@ function setId(message) {
 }
 
 function createRoom() {
-  console.log(userId, "userId");
   socket.send(
     JSON.stringify({
       type: "createRoom",
@@ -269,7 +249,7 @@ function sendOffer(payload) {
 }
 
 const drawOnCanvas = () => {
-  let canvas = document.getElementById("canvas");
+  let canvas = document.getElementById("rtc-canvas");
   let ctx = canvas.getContext("2d");
 
   let stream = canvas.captureStream();
@@ -317,14 +297,11 @@ const clearCanvas = () => {
 };
 
 window.addEventListener("load", () => {
-  /*  document
-    .getElementById("create-offer")
-    .addEventListener("click", createOffer);
-  document
-    .getElementById("create-answer")
-    .addEventListener("click", createAnswer);
-  document.getElementById("add-answer").addEventListener("click", addAnswer); */
   document.getElementById("clear-btn").addEventListener("click", clearCanvas);
-  init();
-  drawOnCanvas();
+  //init();
+  //drawOnCanvas();
+  const canvas = new Canvas();
+  canvas.init();
+  const signaling = new SignalingPeers(canvas, "ws://localhost:4000");
+  signaling.init();
 });
