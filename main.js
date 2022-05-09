@@ -72,14 +72,15 @@ let createPeerConnection = async (sdpType, userId) => {
 
   peerConnection.onicecandidate = async (event) => {
     if (event.candidate) {
-      if (sdpType === "answer-sdp") {
+      console.log(event.candidate, "candidate");
+      if (sdpType === "answer") {
         socket.send(
           JSON.stringify({
             type: "TESTAnswer",
             payload: peerConnection.localDescription,
           })
         );
-      } else if (sdpType === "offer-sdp") {
+      } else if (sdpType === "offer") {
         socket.send(
           JSON.stringify({
             type: "TESTOffer",
@@ -95,7 +96,7 @@ let createPeerConnection = async (sdpType, userId) => {
 };
 
 let createAnswer = async () => {
-  await createPeerConnection("answer-sdp");
+  await createPeerConnection("answer");
   //debugger
 
   let offer = document.getElementById("offer-sdp").value;

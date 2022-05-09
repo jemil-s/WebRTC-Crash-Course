@@ -33,6 +33,9 @@ wss.on("connection", function connection(ws, req) {
       case "offer":
         handleOffer(message);
         break;
+      case "answer":
+        handleAnswer(message);
+        break;
       case "getOffer":
         handleGetOffer(message);
         break;
@@ -66,9 +69,18 @@ function handleOffer(message) {
   );
 }
 
+function handleAnswer(message) {
+  console.log(message, "message");
+  const { userId, offer, roomId } = message.payload;
+  const creator = db[roomId].creatorId;
+  console.log(creator, "creator");
+  webSockets[creator].send(
+    JSON.stringify({ type: "setAnswer", payload: offer })
+  );
+}
+
 function handleGetOffer(message) {
   //const offer = db[message.payload].offer;
-  console.log(message, "message get offer");
   const { userId, roomId } = message.payload;
   const creatorId = db[roomId].creatorId;
   webSockets[creatorId].send(
@@ -93,7 +105,6 @@ function handleCreateRoom(message) {
 }
 
 function handleSetAnswer(message) {
-  console.log(message.payload, "get answer");
   const { roomId, answer } = message.payload;
   const creatorId = db[roomId].creatorId;
   webSockets[creatorId].send(

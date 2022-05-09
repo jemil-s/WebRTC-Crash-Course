@@ -54,10 +54,9 @@ let createPeerConnection = async (sdpType, userId) => {
   };
 
   peerConnection.onicecandidate = async (event) => {
-    if (event.candidate) {
+    if (event.candidate === null) {
       if (sdpType === "offer") {
-        console.log("send offer", peerConnection.localDescription);
-         socket.send(
+        socket.send(
           JSON.stringify({
             type: "offer",
             payload: {
@@ -66,13 +65,52 @@ let createPeerConnection = async (sdpType, userId) => {
               roomId,
             },
           })
-        ); 
+        );
+      } else if (sdpType === "answer") {
+        socket.send(
+          JSON.stringify({
+            type: "answer",
+            payload: {
+              userId,
+              offer: peerConnection.localDescription,
+              roomId,
+            },
+          })
+        );
       }
-      /*       document.getElementById(sdpType).value = JSON.stringify(
-        peerConnection.localDescription
-      ); */
     }
   };
+  /* 
+  peerConnection.onicegatheringstatechange = async (event) => {
+    console.log("event gathering", event);
+    const { localDescription } = event.target;
+    if (localDescription.type === "offer") {
+      console.log("send OFFER");
+      socket.send(
+        JSON.stringify({
+          type: "offer",
+          payload: {
+            userId,
+            offer: peerConnection.localDescription,
+            roomId,
+          },
+        })
+      );
+    }
+    if (localDescription.type === "answer") {
+      socket.send(
+        JSON.stringify({
+          type: "answer",
+          payload: {
+            userId,
+            offer: peerConnection.localDescription,
+            roomId,
+          },
+        })
+      );
+    }
+  };
+  */
 };
 
 let createOffer = async (userId) => {
@@ -82,6 +120,7 @@ let createOffer = async (userId) => {
 
   let offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
+  console.log("setted peer");
 
   /*   const payload = {
     offer,
@@ -114,23 +153,26 @@ let createAnswer = async () => {
 
 let addAnswer = async (answer) => {
   console.log("current remote", answer);
+  console.log("peer", peerConnection);
   if (!peerConnection.currentRemoteDescription) {
-    console.log("current");
+    console.log("current remote");
     peerConnection.setRemoteDescription(answer);
   }
 };
 
 let setAnswer = async (offer) => {
-  console.log("set answeer");
-  createPeerConnection("answer");
-  console.log(offer, "setAnswer");
+  const { creatorId } = offer;
+  createPeerConnection("answer", creatorId);
 
-  await peerConnection.setRemoteDescription(offer);
+  await peerConnection.setRemoteDescription(offer.offer);
 
   answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
 
   const videoPlayer = document.getElementById("user-1");
+
+  console.log(answer, "answer");
+
   videoPlayer.classList.add("show");
 };
 
@@ -185,16 +227,18 @@ let socketMessage = (msg) => {
       break;
     }
     case "offer": {
-      console.log("getOffer from client");
+      console.log("getOffer from client", message);
       setAnswer(message.payload);
       break;
     }
     case "setAnswer": {
       console.log("get answer", message);
       addAnswer(message.payload);
+      break;
     }
     case "getOffer": {
       sendOffer(message.payload);
+      break;
     }
   }
 };
