@@ -9,21 +9,21 @@
     <title>Jemil web rtc</title>
   </head>
   <body>
-    <div id="videos">
+    <div style="width: 100%">
+      <h1>Hang</h1>
+      <div>
+        <h2>room id:</h2>
+        <p id="roomId"></p>
+      </div>
+    </div>
+    <div class="container" id="webrtc-container">
       <video class="video-player" id="user-1" autoplay playsinline></video>
 
-      <canvas id="canvas" width="150" height="150"></canvas>
-      <button id="clear-btn">clear</button>
+      <canvas class="canvas" id="rtc-canvas"></canvas>
     </div>
-
-    <button id="create-offer">Create offer</button>
-    <label>SDP offer</label>
-    <textarea id="offer-sdp"></textarea>
-
-    <button id="create-answer">Create answer</button>
-    <label>SDP answer</label>
-    <textarea id="answer-sdp"></textarea>
-
-    <button id="add-answer">Create answer</button>
+    <button id="clear-btn">clear</button>
+    <button id="createRoom">create room</button>
+    <button style="display: none" id="joinRoom">joinRoom</button>
+    <script src="class.js"></script>
   </body>
 </html>
