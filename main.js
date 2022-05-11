@@ -125,6 +125,7 @@ class SignalingPeers {
     this.socket = new WebSocket(socketsUrl);
     this.socket.onmessage = this.onMessage;
     this.socket.onerror = this.onError;
+    this.creatorId = null;
     this.socket.onopen = this.onOpen;
     this.socket.onclose = this.onClose;
     this.remoteStream = null;
@@ -181,7 +182,9 @@ class SignalingPeers {
 
   onOpen = (msg) => {};
 
-  onClose = (msg) => {};
+  onClose = (msg) => {
+    location.reload();
+  };
 
   createRoom = () => {
     this.socket.send(
@@ -199,6 +202,7 @@ class SignalingPeers {
     const roomidDiv = document.getElementById("roomId");
     const { creatorId } = message;
     const currentRoom = message.roomId;
+    this.creatorId = creatorId;
 
     if (creatorId !== this.userId) {
       const joinRoomBtn = document.getElementById("joinRoom");
@@ -306,6 +310,10 @@ class SignalingPeers {
   init() {
     this.createRoomBtn.addEventListener("click", this.createRoom);
   }
+
+  close = () => {
+    this.socket.close();
+  };
 }
 
 function start() {
